@@ -1,0 +1,11 @@
+# Never commit the API key
+.env
+
+# Raw pulled data and the generated database (rebuildable from the scripts)
+data/
+legal_aid.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/

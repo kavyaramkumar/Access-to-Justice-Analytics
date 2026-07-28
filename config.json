@@ -1,0 +1,37 @@
+{
+  "acs_year": 2024,
+  "cbp_year": 2023,
+  "exclude_states": {
+    "72": "Puerto Rico (ACS covers it, but this project scopes to the 50 states + DC)"
+  },
+  "population_overlay": {
+    "active_group": "south_asian",
+    "groups": {
+      "south_asian": {
+        "description": "South Asian population (ACS table B02015, Asian Alone by Selected Groups)",
+        "variables": {
+          "B02015_021E": "Asian Indian",
+          "B02015_022E": "Bangladeshi",
+          "B02015_023E": "Bhutanese",
+          "B02015_024E": "Nepalese",
+          "B02015_025E": "Pakistani",
+          "B02015_026E": "Sikh",
+          "B02015_027E": "Sri Lankan",
+          "B02015_028E": "Other South Asian"
+        }
+      },
+      "hispanic_or_latino": {
+        "description": "Hispanic or Latino population (ACS table B03003)",
+        "variables": {
+          "B03003_003E": "Hispanic or Latino"
+        }
+      },
+      "black_or_african_american": {
+        "description": "Black or African American alone (ACS table B02001)",
+        "variables": {
+          "B02001_003E": "Black or African American alone"
+        }
+      }
+    }
+  }
+}
