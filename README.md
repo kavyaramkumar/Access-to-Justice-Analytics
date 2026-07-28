@@ -51,11 +51,39 @@ is transparent and easy to adjust.
    <https://api.census.gov/data/key_signup.html>
 3. Copy `.env.example` to a new file named `.env` and paste your key in.
 
+## The dashboard
+
+![Dashboard preview](docs/preview.png)
+
+`docs/index.html` is an interactive dashboard — open it in any browser (no
+server needed). It contains:
+
+1. **A national county map** of all 3,110 scored counties. Hover any county for
+   its full indicator breakdown: population, poverty rate, median income,
+   unemployment, limited-English households, number of legal-services offices,
+   and overlay-community population.
+2. **A need-vs-supply scatter** — counties in the upper-left carry the most
+   need with the fewest legal-services offices per resident.
+3. **A ranked table** of the 20 most severe deserts.
+4. **The overlay-community view** — where the configured community (default:
+   South Asian) lives inside the worst deserts. This is the chart an affinity
+   legal organization would use to pick outreach targets.
+5. **A state-level ranking** by average county desert score.
+
+Every number and chart is generated from a SQL query against `legal_aid.db`;
+the queries are inline at the top of `build_dashboard.py` so you can see
+exactly what feeds each visual.
+
+To publish it as a live public link, go to the repo's **Settings → Pages** and
+set Source to the `main` branch, `/docs` folder. GitHub then serves the
+dashboard at `https://kavyaramkumar.github.io/Access-to-Justice-Analytics/`.
+
 ## Running it
 
 ```
 python pull_census_data.py     # pulls ~3,100 counties from the Census APIs -> data/
 python build_database.py       # builds legal_aid.db and scores every county -> outputs/
+python build_dashboard.py      # builds the interactive dashboard -> docs/index.html
 ```
 
 The ranked results land in `outputs/legal_aid_desert_scores.csv` (open it in

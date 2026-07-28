@@ -9,3 +9,6 @@ legal_aid.db
 __pycache__/
 *.pyc
 .venv/
+
+# Local editor/preview config
+.claude/
