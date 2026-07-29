@@ -1,6 +1,10 @@
 -- Example analysis queries against legal_aid.db.
 -- Run them all with:  sqlite3 -header -column legal_aid.db < sql/analysis_queries.sql
 -- or paste them individually into any SQLite client.
+--
+-- Queries 2 and 3 cover every community at once, so nothing here privileges a
+-- particular group. Query 6 shows the single-community pattern; it takes the
+-- community from one editable line rather than hard-coding one throughout.
 
 -- 1. The 25 most severe legal aid deserts in the country
 SELECT county_name, state_name, total_population,
@@ -10,26 +14,34 @@ ORDER BY desert_score DESC
 LIMIT 25;
 
 
--- 2. Deserts that intersect a specific community.
---    Change 'south_asian' to any group_key in county_populations
---    (e.g. 'vietnamese', 'mexican', 'arab', 'black', 'nepalese').
---    This is the query behind the dashboard's Communities tab.
-SELECT d.county_name, d.state_name, d.total_population,
-       p.population AS community_population,
-       ROUND(p.pct_of_county, 2) AS community_pct,
-       d.desert_score
-FROM desert_scores d
-JOIN county_populations p ON p.county_fips = d.county_fips
-WHERE p.group_key = 'south_asian'
-  AND p.population >= 1000
-ORDER BY d.desert_score DESC
-LIMIT 25;
+-- 2. The worst desert each community faces.
+--    One row per community: its highest-scoring county with a meaningful
+--    presence (1,000+ residents). This is the dashboard's Communities tab for
+--    every group simultaneously, via a window function.
+WITH ranked AS (
+    SELECT p.group_category, p.group_label,
+           d.county_name, d.state_name,
+           p.population AS community_population,
+           ROUND(p.pct_of_county, 2) AS community_pct,
+           d.desert_score,
+           ROW_NUMBER() OVER (PARTITION BY p.group_key
+                              ORDER BY d.desert_score DESC) AS rn
+    FROM county_populations p
+    JOIN desert_scores d ON d.county_fips = p.county_fips
+    WHERE p.population >= 1000
+)
+SELECT group_category, group_label, county_name, state_name,
+       community_population, community_pct, desert_score
+FROM ranked
+WHERE rn = 1
+ORDER BY desert_score DESC;
 
 
 -- 3. Which communities are most exposed to legal aid deserts?
 --    Population-weighted average desert score per community, plus the share of
---    that community living in a severe desert. A high exposure score means the
---    community is concentrated in underserved counties.
+--    that community living in a severe desert. Weighting by population means
+--    this reflects where people actually live rather than counting a
+--    300-person county equally with Los Angeles.
 SELECT p.group_category,
        p.group_label,
        SUM(p.population)                                            AS national_population,
@@ -64,16 +76,22 @@ GROUP BY state_name
 ORDER BY avg_desert_score DESC;
 
 
--- 6. Where is a community both numerous AND underserved?
---    Ranks counties by community population inside above-average deserts —
---    the practical shortlist for where an affinity legal organization would
---    get the most reach per outreach dollar.
+-- 6. Single-community view: where is one community both numerous AND
+--    underserved? The practical shortlist for where an affinity legal
+--    organisation gets the most reach per outreach dollar.
+--
+--    Change the one value in `target` to any group_key. Run
+--        SELECT DISTINCT group_key, group_label FROM county_populations
+--                 ORDER BY group_label;
+--    to list all 48.
+WITH target AS (SELECT 'hispanic_latino' AS group_key)
 SELECT p.group_label, d.county_name, d.state_name,
        p.population AS community_population,
+       ROUND(p.pct_of_county, 2) AS community_pct,
        d.desert_score
 FROM county_populations p
 JOIN desert_scores d ON d.county_fips = p.county_fips
-WHERE p.group_key = 'south_asian'
+WHERE p.group_key = (SELECT group_key FROM target)
   AND d.desert_score >= 50
 ORDER BY p.population DESC
 LIMIT 25;
