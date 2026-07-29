@@ -512,6 +512,23 @@ code { background:var(--panel2); padding:1.5px 5px; border-radius:4px; font-size
 .caveat { border-left:3px solid var(--accent); padding-left:14px; margin:16px 0 0; color:var(--muted); font-size:0.9rem; }
 footer { border-top:1px solid var(--line); padding-top:18px; color:var(--faint); font-size:0.81rem; }
 .loading { padding:60px 0; text-align:center; color:var(--faint); }
+
+/* Zoom controls sitting over the national map */
+.mapctl {
+  display:flex; justify-content:flex-end; align-items:center; gap:6px;
+  padding:4px 4px 0; margin-bottom:-34px; position:relative; z-index:2;
+}
+.mapctl .hint { font-size:0.76rem; color:var(--faint); margin-right:4px; }
+.mbtn {
+  font-family:inherit; font-size:1rem; line-height:1; font-weight:600;
+  width:30px; height:30px; cursor:pointer; color:var(--ink);
+  border:1px solid #ccd3da; border-radius:7px; background:#fff;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.mbtn.wide { width:auto; padding:0 11px; font-size:0.8rem; font-weight:500; }
+.mbtn:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+.mbtn:disabled { opacity:0.4; cursor:default; }
+@media (max-width:560px) { .mapctl .hint { display:none; } }
 """
 
 BODY = """
@@ -547,7 +564,15 @@ BODY = """
     Mississippi Delta, Appalachian Kentucky and West Virginia, the Black Belt
     across Alabama and Georgia, and tribal counties in the Dakotas, Arizona and
     New Mexico.</p>
-    <div class="chart"><div id="map-overview" style="height:600px"></div></div>
+    <div class="chart">
+      <div class="mapctl">
+        <span class="hint">Drag to pan</span>
+        <button class="mbtn" id="z-in" title="Zoom in" aria-label="Zoom in">+</button>
+        <button class="mbtn" id="z-out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+        <button class="mbtn wide" id="z-reset" title="Reset to the whole country">Reset view</button>
+      </div>
+      <div id="map-overview" style="height:600px"></div>
+    </div>
   </section>
   <section>
     <h2><span class="num">02</span>Need against actual legal-services supply</h2>
@@ -964,6 +989,34 @@ function drawMap(divId, colorKey, stateFilter, groupKey) {
   Plotly.react(divId, [trace], layout, CFG);
 }
 
+// ---- national map zoom controls --------------------------------------------
+// Plotly's built-in modebar is hidden to keep the page clean, so these drive the
+// geo projection directly. Zoom scales about the current centre; panning is
+// drag-based, which Plotly handles already via dragmode:'pan'.
+const ZOOM_STEP = 1.6, ZOOM_MAX = 12;
+let mapHome = null, mapZoom = 1;
+
+function captureMapHome() {
+  // Recorded from the first, un-zoomed draw so Reset always has a true origin.
+  if (mapHome) return;
+  const g = document.getElementById('map-overview')._fullLayout.geo;
+  mapHome = {scale: g.projection.scale, lon: g.center.lon, lat: g.center.lat};
+}
+
+function setMapZoom(z, recenter) {
+  captureMapHome();
+  mapZoom = Math.min(ZOOM_MAX, Math.max(1, z));
+  const upd = {'geo.projection.scale': mapHome.scale * mapZoom};
+  if (recenter) {
+    // Reset undoes dragging as well as zoom, so restore the centre too.
+    upd['geo.center.lon'] = mapHome.lon;
+    upd['geo.center.lat'] = mapHome.lat;
+  }
+  Plotly.relayout('map-overview', upd);
+  document.getElementById('z-in').disabled = mapZoom >= ZOOM_MAX - 1e-9;
+  document.getElementById('z-out').disabled = mapZoom <= 1.0001;
+}
+
 // ---- overview --------------------------------------------------------------
 function renderOverview() {
   const severePop = D.pop.reduce((a, p, i) => a + (desert[i] >= 75 ? p : 0), 0);
@@ -977,6 +1030,10 @@ function renderOverview() {
     + kpi(String(D.meta.nGroups), 'Communities you can filter by');
 
   drawMap('map-overview', 'desert', '', null);
+  // Re-weighting redraws this map from a fresh layout, which drops the zoom, so
+  // capture the origin on the first pass and re-apply any zoom on later ones.
+  captureMapHome();
+  if (mapZoom !== 1) setMapZoom(mapZoom, false);
 
   // need vs supply scatter
   const sizeRef = 2 * Math.max(...D.pop) / (38 * 38);
@@ -1320,6 +1377,10 @@ document.getElementById('t-search').oninput = renderCounties;
   e.currentTarget.classList.toggle('on');
   renderCounties();
 });
+
+document.getElementById('z-in').onclick = () => setMapZoom(mapZoom * ZOOM_STEP, false);
+document.getElementById('z-out').onclick = () => setMapZoom(mapZoom / ZOOM_STEP, false);
+document.getElementById('z-reset').onclick = () => setMapZoom(1, true);
 
 const slider = document.getElementById('w-need');
 slider.oninput = () => {
