@@ -9,8 +9,9 @@ use to strategically direct pro bono outreach.**
 
 It covers every county in all 50 states and DC, scores each one 0–100 on how
 severe a legal aid desert it is, and lets you filter those results by any of 48
-ethnic and national-origin communities to see where general legal-aid need
-overlaps a specific population.
+communities — racial, ethnic, ancestry and national-origin groups as the Census
+records them — to see where general legal-aid need overlaps a specific
+population.
 
 ### 🔗 [Open the interactive dashboard](https://kavyaramkumar.github.io/Access-to-Justice-Analytics/)
 
