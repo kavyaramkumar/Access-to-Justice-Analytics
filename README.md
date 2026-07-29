@@ -1,70 +1,48 @@
 # Access to Justice Analytics
 
-A Python and SQL analytics tool that identifies **legal aid deserts** across all
-50 states and DC by cross-referencing socioeconomic and demographic indicators
-— poverty rate, median household income, unemployment, educational attainment,
-limited English proficiency, and foreign-born population — against the actual
-supply of legal services in each county.
+**A Python and SQL analytics tool that identifies legal aid deserts by
+cross-referencing socioeconomic and demographic indicators — poverty rate,
+median income, unemployment, educational attainment, limited English
+proficiency, and foreign-born population — producing data-driven insights that
+legal service providers, bar associations, and affinity legal organizations can
+use to strategically direct pro bono outreach.**
 
-The result is a 0–100 **desert score** for every US county, plus an interactive
-dashboard that filters those results by any of **48 ethnic and national-origin
-communities**. That gives legal service providers, bar associations, and
-affinity legal organizations a data-driven way to direct pro bono outreach to
-where general legal-aid need overlaps the community they serve.
+It covers every county in all 50 states and DC, scores each one 0–100 on how
+severe a legal aid desert it is, and lets you filter those results by any of 48
+ethnic and national-origin communities to see where general legal-aid need
+overlaps a specific population.
 
-![Legal aid deserts by county](docs/preview.png)
+### 🔗 [Open the interactive dashboard](https://kavyaramkumar.github.io/Access-to-Justice-Analytics/)
 
-## Branches
+[![Legal aid deserts by county](docs/preview.png)](https://kavyaramkumar.github.io/Access-to-Justice-Analytics/)
 
-| Branch | Purpose |
-|---|---|
-| **`main`** | General-purpose. Every community is treated identically: the dropdown is alphabetical, and the dashboard opens on whichever community the data shows is most desert-exposed. |
-| **`south-asian-focus`** | The same tool scoped to South Asian legal-aid outreach, for organizations like SABA-NA and SAAJCO. |
+## What it does
 
-The two editions run identical code, the same database, and the same
-methodology. They differ only in the `edition` block of `config.json` and the
-README. Critically, **the desert score itself is community-agnostic** — it
-measures county-level need and legal-services supply, neither of which varies by
-population — so no edition can produce a different score for the same county.
-Switching editions changes which community the dashboard opens on, nothing else.
+Most legal-need analysis stops at demand. This measures **supply** alongside it,
+using County Business Patterns counts of legal-services establishments, so the
+output is unmet need rather than need alone — a wealthy county with no lawyers
+and a poor county with fifty lawyers are not the same problem.
 
-```
-git checkout south-asian-focus
-```
+**667 counties, home to 5.2 million people, have no legal-services establishment
+of any kind.**
 
-## The dashboard
-
-`docs/index.html` is a self-contained interactive page — open it by
-double-clicking, no server needed. To publish it as a live link, go to
-**Settings → Pages** and set Source to the `main` branch, `/docs` folder;
-GitHub will then serve it at
-`https://kavyaramkumar.github.io/Access-to-Justice-Analytics/`.
-
-Five tabs:
+The dashboard has five tabs:
 
 | Tab | What it does |
 |---|---|
 | **Overview** | Headline numbers, the national county map, and the need-vs-supply scatter |
-| **Explore the map** | Recolour the map by any of ten indicators (desert score, need, supply gap, poverty, income, unemployment, limited English, foreign-born, offices per capita, or a community's share of each county) and zoom to any state |
-| **Communities** | Pick any of the 48 communities and see the counties where it faces the widest legal-aid gap, plus a ranking of which communities are most desert-exposed nationally |
+| **Explore the map** | Recolour by any of ten indicators (desert score, need, supply gap, poverty, income, unemployment, limited English, foreign-born, offices per capita, or a community's share of each county) and zoom to any state |
+| **Communities** | Filter to any of the 48 communities and see the counties where it faces the widest legal-aid gap, plus a ranking of which communities are most desert-exposed nationally |
 | **County lookup** | Search and sort all 3,110 counties; filter to zero-provider counties or severe deserts |
-| **How it works** | The methodology, plus live controls that **re-weight the model and recompute every score in the browser** |
+| **How it works** | The methodology, plus live controls that re-weight the model and recompute every score in the browser |
 
-The re-weighting is the part worth playing with. The score ships as 60% need /
-40% supply gap, but you can slide that anywhere and switch individual
-indicators off. It is genuinely informative: drop the two immigration-related
-indicators and Appalachian Kentucky and the Mississippi Delta rise to the top,
-while weighting supply alone surfaces Alabama's Black Belt. The rankings are not
-an artifact of one arbitrary formula, and you can see how much they depend on it.
-
-## Data sources (US Census Bureau APIs)
-
-| Source | What it provides |
-|---|---|
-| ACS 5-Year Estimates, 2024 | County poverty, median income, unemployment, education, foreign-born population |
-| ACS Subject Table S1602 | Percent of limited-English-speaking households per county |
-| ACS B02015 / B02024 / B03001 / B02001 | The 48 communities: Asian groups, Middle Eastern and North African origins, Hispanic or Latino origins, and broad race categories |
-| County Business Patterns, 2023 (NAICS 5411) | Legal-services establishments per county — the supply side |
+The re-weighting is worth playing with. The score ships as 60% need / 40% supply
+gap, but you can slide that anywhere and switch individual indicators off, and
+all 3,110 scores recompute instantly. Drop the two immigration-related
+indicators and Appalachian Kentucky and the Mississippi Delta rise to the top;
+weight supply alone and Alabama's Black Belt surfaces. The rankings are not an
+artifact of one arbitrary formula, and you can see exactly how much they depend
+on it.
 
 ## How the desert score works
 
@@ -81,15 +59,23 @@ A county scoring 90 has more combined need and less legal-service coverage than
 roughly 90% of US counties. Counties under 1,000 residents are excluded because
 their survey estimates are too noisy to rank fairly.
 
-Measuring supply is what turns "need" into "unmet need" — a wealthy county with
-no lawyers and a poor county with fifty lawyers are not the same problem.
-**667 counties, home to 5.2 million people, have no legal-services
-establishment of any kind.**
-
 The whole calculation lives in [sql/desert_scores.sql](sql/desert_scores.sql)
 using window functions, and that query deliberately keeps all seven percentile
-components in its output — which is what lets the dashboard re-weight
-everything client-side without re-running the Python.
+components in its output — which is what lets the dashboard re-weight everything
+client-side without re-running the Python.
+
+The score is **community-agnostic by design**: need and supply are properties of
+a county, not of who lives there. Communities are joined on afterwards to filter
+results, so no community's score can be tilted by how the tool is configured.
+
+## Data sources (US Census Bureau APIs)
+
+| Source | What it provides |
+|---|---|
+| ACS 5-Year Estimates, 2024 | County poverty, median income, unemployment, education, foreign-born population |
+| ACS Subject Table S1602 | Percent of limited-English-speaking households per county |
+| ACS B02015 / B02024 / B03001 / B02001 | The 48 communities: Asian groups, Middle Eastern and North African origins, Hispanic or Latino origins, and broad race categories |
+| County Business Patterns, 2023 (NAICS 5411) | Legal-services establishments per county — the supply side |
 
 ## What the data shows
 
@@ -101,6 +87,8 @@ Dominican (46.9), Bangladeshi (46.3) and Mexican (46.0). Full ranking in
 The most severe individual deserts cluster along the Texas–Mexico border, the
 Mississippi Delta, Appalachian Kentucky and West Virginia, the Black Belt across
 Alabama and Georgia, and tribal counties in the Dakotas, Arizona and New Mexico.
+The single worst is Zapata County, Texas: 38% poverty, zero legal-services
+offices, desert score 88.6.
 
 ## Setup
 
@@ -137,11 +125,10 @@ Three tables, built by [sql/schema.sql](sql/schema.sql):
 - `county_populations` — one row per county **per community** (~150,000 rows)
 - `desert_scores` — the scored output, including each percentile component
 
-Community population lives in its own table rather than as one column per
-group, because the desert score does not depend on which community you are
-looking at. The score is computed once, group-agnostic, and the dashboard JOINs
-to `county_populations` to filter. Adding a community is a data change, not a
-schema change.
+Community population lives in its own table rather than as one column per group,
+because the desert score does not depend on which community you are looking at.
+The score is computed once and the dashboard JOINs to `county_populations` to
+filter. Adding a community is a data change, not a schema change.
 
 ## Adding or changing communities
 
@@ -152,9 +139,10 @@ runtime. Browse variable codes at
 <https://api.census.gov/data/2024/acs/acs5/variables.html>, then re-run the
 three scripts.
 
-To change which community the dashboard opens on, set
-`edition.default_community` in `config.json` to any group key, or to
-`"most_exposed"` to let the build derive it from the data.
+By default the dashboard opens on whichever community the data shows is most
+desert-exposed. To pin a specific one instead — useful when running this for a
+single organisation — set `dashboard.default_community` in `config.json` to that
+community's key.
 
 ## Reading the numbers carefully
 
@@ -165,8 +153,8 @@ To change which community the dashboard opens on, set
 - ACS figures are 5-year survey estimates with margins of error that widen in
   small counties.
 - The Middle Eastern / North African and Pacific Islander tables count "groups
-  tallied", so someone reporting two origins is counted in both and those
-  totals can exceed a county's population.
+  tallied", so someone reporting two origins is counted in both and those totals
+  can exceed a county's population.
 - Because the need index includes limited-English and foreign-born share,
   counties with extreme poverty but few immigrants — many tribal counties, for
   example — score lower than their hardship alone would suggest. Oglala Lakota
@@ -179,14 +167,19 @@ To change which community the dashboard opens on, set
 ## Project structure
 
 ```
-config.json               data years, edition settings, 48 community definitions
+config.json               data years, dashboard settings, 48 community definitions
 pull_census_data.py       step 1: pull county data from the Census APIs
 build_database.py         step 2: load SQLite, score, export rankings
 build_dashboard.py        step 3: build the interactive dashboard
 sql/schema.sql            database schema
 sql/desert_scores.sql     the desert-score methodology (all SQL)
 sql/analysis_queries.sql  example analyses
-docs/index.html           the interactive dashboard (GitHub Pages ready)
+docs/index.html           the interactive dashboard (served by GitHub Pages)
 outputs/                  ranked scores + community exposure (committed)
 data/                     raw pulled data and cached boundaries (generated)
 ```
+
+## Built with
+
+Python (pandas, requests), SQLite with window functions, Plotly, and the US
+Census Bureau API. No paid services or API costs beyond a free Census key.

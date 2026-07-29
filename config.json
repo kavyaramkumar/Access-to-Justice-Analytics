@@ -6,22 +6,15 @@
     "72": "Puerto Rico (ACS covers it, but this project scopes to the 50 states + DC)"
   },
 
-  "_edition_comment": [
-    "This repository has two editions, which differ only in this block plus the",
-    "README. The code and data are identical.",
-    "",
-    "  main               general-purpose: treats every community equally",
-    "  south-asian-focus  branch scoped to South Asian legal-aid outreach",
-    "",
+  "_dashboard_comment": [
     "default_community sets which community the dashboard opens on.",
-    "  'most_exposed' picks it from the data at build time — the community with",
-    "  the highest population-weighted desert score — so no community is",
-    "  privileged by authorial choice.",
-    "  Any group_key below (e.g. 'south_asian') pins it instead."
+    "  'most_exposed' derives it from the data at build time — the community",
+    "  with the highest population-weighted desert score among those of",
+    "  250,000+ people — so no community is privileged by authorial choice.",
+    "  Setting any group_key below (e.g. 'south_asian') pins it instead, which",
+    "  is useful if you are running this for one specific organisation."
   ],
-  "edition": {
-    "name": null,
-    "note": null,
+  "dashboard": {
     "default_community": "most_exposed"
   },
 
@@ -30,8 +23,8 @@
     "All are pulled in the same API calls, so adding a group here costs nothing",
     "at runtime — it just appears in the dashboard dropdown.",
     "",
-    "Ordered alphabetically within each category, deliberately: the dropdown",
-    "order is presentation, and no community should lead it by default.",
+    "Ordered alphabetically within each category, deliberately: dropdown order",
+    "is presentation, and no community should lead it by default.",
     "",
     "'category' controls grouping in the dashboard dropdown.",
     "'variables' are ACS 2024 5-year variable codes, summed together.",

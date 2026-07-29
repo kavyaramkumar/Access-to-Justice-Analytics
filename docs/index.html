@@ -131,12 +131,6 @@ code { background:var(--panel2); padding:1.5px 5px; border-radius:4px; font-size
 .caveat { border-left:3px solid var(--accent); padding-left:14px; margin:16px 0 0; color:var(--muted); font-size:0.9rem; }
 footer { border-top:1px solid var(--line); padding-top:18px; color:var(--faint); font-size:0.81rem; }
 .loading { padding:60px 0; text-align:center; color:var(--faint); }
-.edition {
-  display:inline-block; background:#e8f2f4; border:1px solid #b9d7dd;
-  color:#0b5561; border-radius:20px; padding:5px 14px; margin-bottom:14px;
-  font-size:0.8rem; font-weight:600; letter-spacing:0.01em;
-}
-.edition span { font-weight:400; opacity:0.85; }
 </style>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
 </head>
@@ -144,7 +138,6 @@ footer { border-top:1px solid var(--line); padding-top:18px; color:var(--faint);
 
 <div class="wrap">
 <header>
-  
   <h1>Legal Aid Deserts in the United States</h1>
   <p class="sub">Every county in the 50 states and DC, scored on how much unmet
   legal need it carries against how little legal-services capacity exists there
@@ -252,7 +245,7 @@ footer { border-top:1px solid var(--line); padding-top:18px; color:var(--faint);
       </select>
     </div>
   </div>
-  <p class="note">All 48 communities are treated identically here — the dropdown is ordered alphabetically and none is weighted differently in the score. It opens on <strong>American Indian / Alaska Native</strong> only because that community currently has the highest population-weighted desert score of any community of 250,000+ in the data, which the build computes rather than assumes. Switch freely.</p>
+  <p class="note">All 48 communities are treated identically: the dropdown is ordered alphabetically, and none is weighted differently in the score, which measures county-level need and legal-services supply and so does not vary by population. It opens on <strong>American Indian / Alaska Native</strong> only because that community currently has the highest population-weighted desert score of any community of 250,000+ people — computed from the data at build time rather than assumed. Switch freely.</p>
   <div class="kpis" id="kpis-community"></div>
   <div class="flag" id="flag-communities"></div>
   <section>

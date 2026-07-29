@@ -257,13 +257,13 @@ group_payload.sort(key=lambda g: order.get(g["k"], 999))
 # ---------------------------------------------------------------------------
 # Which community does the dashboard open on?
 #
-# Any fixed choice here is an editorial one, so the default edition derives it
-# from the data instead: the community with the highest population-weighted
-# desert score, i.e. the one living in the least-served counties. An edition
-# aimed at a specific community pins its own key in config.json instead.
+# Hard-coding one community here would be an editorial choice, so it is derived
+# from the data instead: whichever community has the highest population-weighted
+# desert score, i.e. is living in the least-served counties. config.json can
+# pin a specific community if you are running this for one organisation.
 # ---------------------------------------------------------------------------
 
-EDITION = CONFIG.get("edition") or {}
+DASHBOARD_CFG = CONFIG.get("dashboard") or {}
 
 # A population-weighted score over a small community rests on a handful of
 # counties and swings hard, so the derived default is drawn from communities
@@ -294,15 +294,15 @@ def most_exposed_community():
     return key, label, score
 
 
-requested = EDITION.get("default_community", "most_exposed")
+requested = DASHBOARD_CFG.get("default_community", "most_exposed")
 if requested == "most_exposed":
     default_group, default_label, default_score = most_exposed_community()
     print(f"  default community: {default_label} "
           f"(most desert-exposed, weighted score {default_score:.1f})")
 else:
     if requested not in {g["k"] for g in group_payload}:
-        sys.exit(f"config.json edition.default_community='{requested}' is not a "
-                 f"known group key")
+        sys.exit(f"config.json dashboard.default_community='{requested}' is not "
+                 f"a known group key")
     default_group = requested
     default_label = next(g["l"] for g in group_payload if g["k"] == requested)
     print(f"  default community: {default_label} (pinned by config)")
@@ -512,18 +512,11 @@ code { background:var(--panel2); padding:1.5px 5px; border-radius:4px; font-size
 .caveat { border-left:3px solid var(--accent); padding-left:14px; margin:16px 0 0; color:var(--muted); font-size:0.9rem; }
 footer { border-top:1px solid var(--line); padding-top:18px; color:var(--faint); font-size:0.81rem; }
 .loading { padding:60px 0; text-align:center; color:var(--faint); }
-.edition {
-  display:inline-block; background:#e8f2f4; border:1px solid #b9d7dd;
-  color:#0b5561; border-radius:20px; padding:5px 14px; margin-bottom:14px;
-  font-size:0.8rem; font-weight:600; letter-spacing:0.01em;
-}
-.edition span { font-weight:400; opacity:0.85; }
 """
 
 BODY = """
 <div class="wrap">
 <header>
-  __EDITIONBANNER__
   <h1>Legal Aid Deserts in the United States</h1>
   <p class="sub">Every county in the 50 states and DC, scored on how much unmet
   legal need it carries against how little legal-services capacity exists there
@@ -1360,32 +1353,25 @@ render('overview');
 # Assemble
 # ---------------------------------------------------------------------------
 
-if EDITION.get("name"):
-    note = EDITION.get("note") or ""
-    banner = (f'<div class="edition">{EDITION["name"]} edition'
-              + (f' <span>&middot; {note}</span>' if note else '')
-              + '</div>')
-else:
-    banner = ""
-
 if requested == "most_exposed":
     default_note = (
-        f"All {len(group_payload)} communities are treated identically here — the "
-        f"dropdown is ordered alphabetically and none is weighted differently in "
-        f"the score. It opens on <strong>{default_label}</strong> only because "
-        f"that community currently has the highest population-weighted desert "
-        f"score of any community of 250,000+ in the data, which the build "
-        f"computes rather than assumes. Switch freely.")
+        f"All {len(group_payload)} communities are treated identically: the "
+        f"dropdown is ordered alphabetically, and none is weighted differently in "
+        f"the score, which measures county-level need and legal-services supply "
+        f"and so does not vary by population. It opens on "
+        f"<strong>{default_label}</strong> only because that community currently "
+        f"has the highest population-weighted desert score of any community of "
+        f"250,000+ people — computed from the data at build time rather than "
+        f"assumed. Switch freely.")
 else:
     default_note = (
-        f"This edition opens on <strong>{default_label}</strong> by "
-        f"configuration. The underlying desert score is identical for every "
-        f"community — it measures county-level need and legal-services supply, "
-        f"which do not vary by population — so all "
+        f"Pinned to open on <strong>{default_label}</strong> via "
+        f"<code>config.json</code>. The desert score itself is identical for "
+        f"every community — it measures county-level need and legal-services "
+        f"supply, which do not vary by population — and all "
         f"{len(group_payload)} communities remain available in the dropdown.")
 
 body = (BODY
-        .replace("__EDITIONBANNER__", banner)
         .replace("__DEFAULTNOTE__", default_note)
         .replace("__NGROUPS__", str(len(group_payload)))
         .replace("__ACS__", str(CONFIG["acs_year"]))
