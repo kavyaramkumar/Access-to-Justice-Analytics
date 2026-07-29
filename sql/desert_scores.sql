@@ -13,6 +13,15 @@
 -- A county scoring 90 has more combined need and less legal-service coverage
 -- than roughly 90% of US counties. Counties under 1,000 residents are
 -- excluded because their ACS estimates are too noisy to rank fairly.
+--
+-- The seven individual pr_* percentile columns are kept in the output table on
+-- purpose: the dashboard reads them so it can recompute the score live when the
+-- user changes the need/supply weighting or turns an indicator off. Keeping the
+-- components means the weights are never baked into the data.
+--
+-- Note this table is deliberately community-agnostic. Need and supply do not
+-- depend on which population you are studying, so the dashboard JOINs
+-- county_populations to filter by community rather than rescoring per group.
 
 DROP TABLE IF EXISTS desert_scores;
 
@@ -31,8 +40,6 @@ WITH ranked AS (
         foreign_born_pct,
         legal_services_establishments,
         legal_services_per_10k,
-        overlay_population,
-        overlay_pct,
         PERCENT_RANK() OVER (ORDER BY poverty_rate_pct)                 AS pr_poverty,
         PERCENT_RANK() OVER (ORDER BY median_household_income DESC)     AS pr_low_income,
         PERCENT_RANK() OVER (ORDER BY unemployment_rate_pct)            AS pr_unemployment,
